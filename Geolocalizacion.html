@@ -1,0 +1,205 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Cor Processu Mobile</title>
+<link href="ccs/jquery-mobile/jquery.mobile-1.0a3.min.css" rel="stylesheet" type="text/css">
+<script src="ccs/jquery-mobile/jquery-1.5.min.js" type="text/javascript"></script>
+<script src="ccs/jquery-mobile/interpretadorAjax.js" type="text/javascript"></script>
+<script src="ccs/jquery-mobile/jquery.mobile-1.0a3.min.js" type="text/javascript"></script>
+<script language="javascript">
+/* Valida que el navegador soporte la golocalización
+ * 20120622 MT
+ */
+function geolocalizacion_usuario() {
+    if (navigator.geolocation) {
+        obtenerPosicion();
+	} else
+        alert('Su navegador no soporta esta caracteristica de Html5');
+}
+ 
+ 
+/* Se hace uso de la API de localizacion de html5 y establece las funciones que procesaran los datos
+ * 20120622 MT
+ */
+function obtenerPosicion() {
+    navigator.geolocation.getCurrentPosition(coordenada, manejoErrores, {
+        enableHighAccuracy: true
+    });
+}
+ 
+/* Recibe la coordenada y muestra los datos al usuario
+ * 20120622 MT
+ */
+function coordenada(position) {
+    var posdata = '';
+    posdata += 'Coordenada: ' + position.coords.latitude + ',' + position.coords.longitude + '.\n';
+    posdata += 'Precision: ' + position.coords.altitude + ' mts.\n';
+    posdata += 'Altitud: ' + position.coords.accuracy + ' mts sobre el nivel del mar.\n';
+    posdata += 'Precision de Altitud: ' + position.coords.altitudeAccuracy + ' mts.\n';
+    posdata += 'Grados(N): ' + position.coords.heading + '??.\n';
+    posdata += 'Velocidad: ' + position.coords.speed + ' mts/seg.\n';
+    posdata += 'Tiempo: ' + position.timestamp + '.\n';
+	localStorage.latitud =  position.coords.latitude;
+	localStorage.longitud = position.coords.longitude;
+	alert("Coordenadas de Ubicación Actual: "+localStorage.latitud + ", " +localStorage.longitud);
+}
+ 
+/* Manejo de errores de la implementacion de la API
+ * 20120622 MT
+ */
+function manejoErrores(err) {
+    switch (err.code) {
+    case 0:
+        //ERROR DESCONOCIDO
+        alert(err.code + ' ERROR DESCONOCIDO: ' + err.message);
+        break;
+    case 1:
+        //PERMISO DENEGADO
+        alert(err.code + ' PERMISO DENEGADO: ' + err.message);
+        break;
+    case 2:
+        //POSICION NO DISPONIBLE
+        alert(err.code + ' POSICION NO DISPONIBLE: ' + err.message);
+        break;
+    case 3:
+        //TIMEOUT
+        alert(err.code + ' TIMEOUT: ' + err.message);
+        break;
+	default:
+		alert('Error al intentar obtener las Coordenadas.');
+        break;
+    }
+}
+
+
+/* Guarda en base de datos las coordenadas de un punto
+ * 20120622 MT
+ */
+function guardarUbicacion() {
+	var latitud = document.getElementById('latitud').value;
+	var longitud = document.getElementById('longitud').value;
+	var id = document.getElementById('id').value;
+	var desc = document.getElementById('desc').value;
+	var tipo = document.getElementById('tipo').value;
+	var telf = document.getElementById('telf').value;
+	if (latitud == '') {
+		latitud = localStorage.latitud;
+		longitud = localStorage.longitud;
+	}
+	
+	$.getJSON("http://nube4u.com/sid_servicios/json/demo_mobile/IngresarUbicacion.php?jsoncallback=?", {latitud:latitud, longitud:longitud,id:id,desc:desc,tipo:tipo,telf:telf}, function(data) {
+		if (data.result == "OK") {
+			alert("Las coordenadas de " + id + " se guardaron exitosamente.");
+			location.href="Geolocalizacion.html\#menu_geolocalizacion";
+		}
+	});
+}
+	
+function redireccionarMapa(url) {
+	localStorage.regresar = url;
+	window.open(url,"_self");
+}
+
+/* Limpia las variables del localStorage, y redirecciona al Login
+ * 20120613 MT
+ */
+function salir() {
+	localStorage.clear();
+	window.open("index.html","_self");	
+}
+	
+/* Abre una nueva ventana en la página de SID
+ * 20120613 MT
+ */
+function sid() {
+	window.open("http://www.integradores.net");		
+}
+
+/* Función que redirecciona al url pasapa por parámetro
+ * 20120613 MT
+ */
+function redireccionar(url) {
+	localStorage.regresar = url;
+	window.open(url,"_self");
+}
+</script>
+</head>
+
+<body>
+
+<!-- Menu Geolocalización -->
+<div data-role="page" id="menu_geolocalizacion">
+	<div data-role="header" align="center" data-theme="b">
+		<img src="images/SID_logo_Mobile.png" width="410" height="100">
+        <div data-role="navbar" data-iconpos="top">
+        	<ul>
+            	<li><a onClick="redireccionar('index.html\#menu_principal')">Regresar</a></li>
+            <li><a onClick="sid()">SID, C.A.</a></li>
+            <li><a onClick="salir()">Salir</a></li>
+         	</ul>
+      	</div>
+	</div>
+	<div data-role="content">
+    	<ul data-role="listview" data-split-icon="delete">
+    	  <li data-role="list-divider" role="heading"><h3>Menú de Geolocalización</h3></li>
+    	</ul>	
+		<ul data-role="listview" id="opcionesMenu">
+          <li><a onClick="redireccionarMapa('GestionarTipos.html')">Gestionar Tipos</a></li>
+          <li><a onClick="redireccionarMapa('GuardarUbicacion.html')">Guardar Ubicación</a></li>
+          <li><a onClick="redireccionarMapa('Mapa1.html')">Mostrar Mapa</a></li>
+          <li data-role="list-divider" role="heading"></li>
+		</ul>		
+	</div>
+</div>
+<!------- Menu Geolocalización -->
+
+<!-- Guardar Ubicación -->
+<div data-role="page" id="geolocalizacion_pto">
+  <div data-role="header" data-theme="b">
+		<h1>Ingresar Ubicación</h1>
+        <div data-role="navbar" data-iconpos="top">
+         <ul>
+           	<li><a href="#menu_geolocalizacion">Regresar</a></li>
+            <li><a onClick="sid()">SID, C.A.</a></li>
+            <li><a onClick="salir()">Salir</a></li>
+         </ul>
+      </div>
+	</div>
+  <div data-role="content">
+  	<div data-role="collapsible-set">
+  	  <div data-role="collapsible" data-theme="b" data-collapsed="true">
+  	    <h3>Obtener Coordenadas de Ubicación Actual</h3>
+  	    <p><a onClick="geolocalizacion_usuario();" data-role="button" data-theme="b">Obtener Coordenadas</a></p>
+      </div>
+  	  <div data-role="collapsible" data-theme="b" data-collapsed="true">
+  	    <h3>Coordenadas Manuales</h3>
+  	    <p>
+      		<label for="latitud">Latitud:</label>
+      		<input type="text" name="latitud" id="latitud" value=""  />
+    	    <label for="longitud">Longitud:</label>
+		    <input type="text" name="longitud" id="longitud" value=""  />
+    	</p>
+      </div>
+    </div>
+
+  	
+  	<label for="id">ID:</label>
+  	<input type="text" name="id" id="id" value=""  />
+    <label for="desc">Descripción:</label>
+  	<textarea cols="40" rows="8" name="desc" id="desc"></textarea>
+    <label for="tipo">Tipo:</label>
+  	<input type="text" name="tipo" id="tipo" value=""  />
+    <label for="telf">Teléfono:</label>
+  	<input type="text" name="telf" id="telf" value=""  />
+    
+  	<a onClick="guardarUbicacion();"data-role="button" data-theme="b">Guardar</a> </div>
+</div>
+<!-- Guardar Ubicación -->
+
+
+
+
+
+</body>
+</html>
